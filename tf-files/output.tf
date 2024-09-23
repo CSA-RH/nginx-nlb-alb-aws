@@ -18,9 +18,9 @@ output "private_vm_key_pem" {
 }
 
 # Output private IP of the Network Load Balancer
-output "nlb_private_ip_dns" {
-  value       = data.external.nlb_dns_ip_lookup.result["ip"]
-  description = "The IP address of the DNS entry"
+output "nlb_private_ip" {
+  value       = data.aws_network_interface.nlb-network-interface.private_ip
+  description = "The IP address of the NLB"
 }
 
 # Output the DNS name of the ALB

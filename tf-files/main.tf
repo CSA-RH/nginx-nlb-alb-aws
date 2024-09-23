@@ -285,17 +285,11 @@ resource "aws_lb_listener" "nlb_listener" {
 }
 
 # -- Data source for retrieving the private IP of the NLB
-resource "null_resource" "dns_lookup" {    
-    provisioner "local-exec" {    
-        command       = "dig +short ${aws_lb.nlb.dns_name} | tail -n 1"
+data "aws_network_interface" "nlb-network-interface" {
+    filter {
+        name   = "subnet-id"
+        values = [ aws_subnet.subnet-nlb-priv.id ]
     }
-}
-
-data "external" "nlb_dns_ip_lookup" {
-  program = ["bash", "-c", <<-EOT
-    dig +short ${aws_lb.nlb.dns_name} | tail -n 1 | jq -n --arg ip "$(</dev/stdin)" '{"ip":$ip}'
-  EOT
-  ]
 }
 
 # APPLICATION LOAD BALANCER
@@ -319,7 +313,7 @@ resource "aws_lb_target_group" "alb_public_target_group" {
 
 resource "aws_lb_target_group_attachment" "tg_attachment_nlb" {
   target_group_arn = aws_lb_target_group.alb_public_target_group.arn
-  target_id        = data.external.nlb_dns_ip_lookup.result["ip"]
+  target_id        = data.aws_network_interface.nlb-network-interface.private_ip
   port             = 80
 }
 
